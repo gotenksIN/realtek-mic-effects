@@ -1,0 +1,21 @@
+# Live monitoring (sidetone) of the Realtek Mic Effects source.
+# Install to ~/.config/systemd/user/realtek-mic-sidetone.service and manage with scripts/sidetone.sh.
+# Optional env files in ~/.config/realtek-mic-effects/:
+#   sidetone.env       SIDETONE_ARGS="..." for extra pw-loopback flags.
+#   sidetone-sink.env  SIDETONE_SINK_ARGS="-P <sink>" (managed by sidetone.sh --sink; overrides -P).
+
+[Unit]
+Description=Realtek Mic Effects sidetone (live mic monitoring)
+After=pipewire.service wireplumber.service
+PartOf=pipewire.service
+
+[Service]
+Type=simple
+EnvironmentFile=-%E/realtek-mic-effects/sidetone.env
+EnvironmentFile=-%E/realtek-mic-effects/sidetone-sink.env
+ExecStart=/usr/bin/pw-loopback -C realtek_mic_effects_source -n realtek-mic-sidetone -l 10 -i "node.passive=true node.dont-fallback=true node.linger=true" -o "node.description=\"Realtek Mic Sidetone\" node.dont-fallback=true node.linger=true" $SIDETONE_ARGS $SIDETONE_SINK_ARGS
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=pipewire.service
