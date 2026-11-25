@@ -156,3 +156,12 @@ target_compile_options(rmic_ns PRIVATE -Wno-unused-parameter)
 
 configure_file(lv2/rmic_ns.lv2/manifest.ttl ${CMAKE_BINARY_DIR}/rmic_ns.lv2/manifest.ttl COPYONLY)
 configure_file(lv2/rmic_ns.lv2/rmic_ns.ttl ${CMAKE_BINARY_DIR}/rmic_ns.lv2/rmic_ns.ttl COPYONLY)
+
+# Offline WAV CLI processor
+pkg_check_modules(SNDFILE REQUIRED IMPORTED_TARGET sndfile)
+
+add_executable(rmic-process
+    tools/rmic_process.c
+)
+target_compile_definitions(rmic-process PRIVATE _POSIX_C_SOURCE=200809L)
+target_link_libraries(rmic-process PRIVATE rmicdsp PkgConfig::SNDFILE)
