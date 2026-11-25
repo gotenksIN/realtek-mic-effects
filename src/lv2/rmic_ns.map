@@ -1,0 +1,7 @@
+/* Export only the LV2 plugin entry point. */
+{
+    global:
+        lv2_descriptor;
+    local:
+        *;
+};

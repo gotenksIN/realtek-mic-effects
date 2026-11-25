@@ -136,3 +136,23 @@ target_link_options(spa-aec-realtek PRIVATE -Wl,-z,start-stop-visibility=hidden)
 # string helpers use.
 target_compile_definitions(spa-aec-realtek PRIVATE _POSIX_C_SOURCE=200809L)
 target_compile_options(spa-aec-realtek PRIVATE -Wno-unused-parameter)
+
+# LV2 Noise Suppression plugin: rmic_ns.lv2/rmic_ns.so
+pkg_check_modules(LV2 REQUIRED IMPORTED_TARGET lv2)
+
+add_library(rmic_ns SHARED
+    src/lv2/rmic_ns_lv2.c
+)
+set_target_properties(rmic_ns PROPERTIES
+    OUTPUT_NAME "rmic_ns"
+    PREFIX ""
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/rmic_ns.lv2"
+)
+target_link_libraries(rmic_ns PRIVATE rmicdsp PkgConfig::LV2)
+set(LV2_EXPORT_MAP ${CMAKE_CURRENT_SOURCE_DIR}/src/lv2/rmic_ns.map)
+target_link_options(rmic_ns PRIVATE -Wl,--version-script=${LV2_EXPORT_MAP})
+set_property(TARGET rmic_ns APPEND PROPERTY LINK_DEPENDS ${LV2_EXPORT_MAP})
+target_compile_options(rmic_ns PRIVATE -Wno-unused-parameter)
+
+configure_file(lv2/rmic_ns.lv2/manifest.ttl ${CMAKE_BINARY_DIR}/rmic_ns.lv2/manifest.ttl COPYONLY)
+configure_file(lv2/rmic_ns.lv2/rmic_ns.ttl ${CMAKE_BINARY_DIR}/rmic_ns.lv2/rmic_ns.ttl COPYONLY)
