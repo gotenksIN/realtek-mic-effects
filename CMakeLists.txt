@@ -93,3 +93,21 @@ add_compile_options(
 add_link_options("$<$<CONFIG:Release>:${RMIC_RELEASE_LTO_CFI}>")
 
 find_package(PkgConfig REQUIRED)
+pkg_check_modules(FFTW3F REQUIRED IMPORTED_TARGET fftw3f)
+find_library(FFTW3F_THREADS_LIB fftw3f_threads REQUIRED)
+
+# Core DSP static library (compiled with -fPIC for shared plugins)
+add_library(rmicdsp STATIC
+    src/dsp/hpf.cpp
+    src/dsp/delay_est.cpp
+    src/dsp/aec.cpp
+    src/dsp/omlsa_ns.cpp
+    src/dsp/pipeline.cpp
+)
+target_include_directories(rmicdsp
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/dsp
+)
+target_link_libraries(rmicdsp PRIVATE ${FFTW3F_THREADS_LIB} PkgConfig::FFTW3F ${CMAKE_DL_LIBS} m)
+set_target_properties(rmicdsp PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_compile_options(rmicdsp PRIVATE -Wpedantic)
