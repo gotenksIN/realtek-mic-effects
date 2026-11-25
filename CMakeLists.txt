@@ -111,3 +111,28 @@ target_include_directories(rmicdsp
 target_link_libraries(rmicdsp PRIVATE ${FFTW3F_THREADS_LIB} PkgConfig::FFTW3F ${CMAKE_DL_LIBS} m)
 set_target_properties(rmicdsp PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_options(rmicdsp PRIVATE -Wpedantic)
+
+# PipeWire SPA AEC plugin: aec/libspa-aec-realtek.so
+pkg_check_modules(SPA REQUIRED IMPORTED_TARGET libspa-0.2)
+# The libspa-0.2 module version is always 0.2. The SPA headers ship with
+# PipeWire, so gate on the PipeWire version instead.
+pkg_check_modules(PIPEWIRE REQUIRED libpipewire-0.3>=1.6)
+
+add_library(spa-aec-realtek SHARED
+    src/spa/aec-realtek.c
+)
+set_target_properties(spa-aec-realtek PROPERTIES
+    OUTPUT_NAME "spa-aec-realtek"
+    PREFIX "lib"
+)
+target_link_libraries(spa-aec-realtek PRIVATE rmicdsp PkgConfig::SPA)
+set(SPA_EXPORT_MAP ${CMAKE_CURRENT_SOURCE_DIR}/src/spa/aec-realtek.map)
+target_link_options(spa-aec-realtek PRIVATE -Wl,--version-script=${SPA_EXPORT_MAP})
+set_property(TARGET spa-aec-realtek APPEND PROPERTY LINK_DEPENDS ${SPA_EXPORT_MAP})
+# LLD gives the linker-generated __start_/__stop_spa_log_topic symbols
+# protected visibility and keeps them exported despite the version script.
+target_link_options(spa-aec-realtek PRIVATE -Wl,-z,start-stop-visibility=hidden)
+# Strict C23 (no GNU extensions) hides the POSIX locale API that the SPA
+# string helpers use.
+target_compile_definitions(spa-aec-realtek PRIVATE _POSIX_C_SOURCE=200809L)
+target_compile_options(spa-aec-realtek PRIVATE -Wno-unused-parameter)

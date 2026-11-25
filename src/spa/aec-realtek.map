@@ -1,0 +1,8 @@
+/* Export only the SPA plugin entry points. */
+{
+    global:
+        spa_handle_factory_enum;
+        spa_log_topic_enum;
+    local:
+        *;
+};
