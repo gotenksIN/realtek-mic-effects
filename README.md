@@ -120,7 +120,17 @@ systemctl --user daemon-reload
       sudo alsactl store
       ```
 
-   PipeWire may adjust the boost control when you change input volume; re-check `alsamixer` after changing mic gain.
+   PipeWire maps `100%` on the hardware mic slider to maximum ALSA gain, stacking `Capture` (`+30 dB`) on top of **Rear Mic Boost** (`+30 dB`) for `+60 dB` total and clipping the input.
+   Lower the hardware mic slider in sound settings (or run `pactl set-source-volume <source> 40%`) before fine-tuning `Rear Mic Boost` and `Capture` in `alsamixer`; WirePlumber restores the PipeWire slider value on restart, which otherwise resets raw `amixer` changes back to `100%`.
+
+4. If your system has multiple microphones (such as a webcam mic), pin the hardware mic in `capture.props` inside `${XDG_CONFIG_HOME:-$HOME/.config}/pipewire/pipewire.conf.d/60-realtek-mic-effects.conf` and restart PipeWire:
+
+   ```
+   capture.props = {
+       node.passive = true
+       target.object = "<source_name>"   # see: pactl list short sources
+   }
+   ```
 
 To tune DSP parameters, edit `aec.args` in `${XDG_CONFIG_HOME:-$HOME/.config}/pipewire/pipewire.conf.d/60-realtek-mic-effects.conf` and restart PipeWire.
 Use `realtek.gain_db` (`-24.0` to `+30.0 dB`, default `0.0`) in `aec.args` for fine digital makeup gain after DSP.
